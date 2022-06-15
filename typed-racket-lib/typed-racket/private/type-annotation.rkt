@@ -43,7 +43,7 @@
         (parse-type/id stx prop)))
   (syntax-parse stx
     [v:type-label^
-     (pt (attribute v.value))]
+     (-lst/depth (get-match-ellipsis-depth #'v) (pt (attribute v.value)))]
     [_:id
      #:when lookup?
      (define ty (lookup-type stx #f))
@@ -143,3 +143,15 @@
   (syntax-parse stx
     [v:type-dotted^ (syntax-e (attribute v.value))]
     [_ #f]))
+
+;; -lst/depth : Natural Type -> Type
+(define (-lst/depth d t)
+  (if (zero? d) t (-lst/depth (sub1 d) (-lst t))))
+
+;; get-match-ellipsis-depth : Identifier -> Natural
+;; Gets the 'match-ellipsis-depth property, default 0
+(define (get-match-ellipsis-depth x)
+  ;; Repeatedly take the car as long as its a pair
+  (define (ca*r v) (if (pair? v) (ca*r (car v)) v))
+  (define v (ca*r (syntax-property x 'match-ellipsis-depth)))
+  (if (exact-nonnegative-integer? v) v 0))
